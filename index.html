@@ -129,10 +129,8 @@ function doSecond() {
         update();
         log23("第二抽選 → 当たり！（+100pt）");
         return doThird();
-    } else {
-        log23("第二抽選 → ハズレ");
-        return true;
-    }
+    } 
+    return true; // ハズレはログ表示なし
 }
 
 /* =============================
@@ -153,7 +151,7 @@ function doThird() {
 ============================= */
 function doFourth() {
 
-    const prob = 0.10226; // 1回あたり確率
+    const prob = 0.1449; // 1回あたり確率（11回で継続率80%）
     const count = 11;      // 11回抽選
 
     let loop = 0;
