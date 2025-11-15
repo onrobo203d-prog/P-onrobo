@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ラッシュ機パチンコシミュレーター</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #fafafa; }
+  button { font-size: 20px; padding: 10px 20px; margin: 5px; }
+  #log { white-space: pre-line; background: #fff; padding: 10px; border:1px solid #ccc; height: 300px; overflow-y: scroll; }
+</style>
+</head>
+<body>
+
+<h2>ラッシュ機 パチンコシミュレーター</h2>
+
+<p>ポイント: <span id="pt">0</span></p>
+
+<button onclick="addPoint()">＋（ポイント追加）</button>
+<button onclick="startFirst()">第一抽選開始（1pt消費）</button>
+
+<h3>ログ</h3>
+<div id="log"></div>
+
+<script>
+let points = 0;
+
+function log(msg) {
+    document.getElementById("log").textContent += msg + "\n";
+}
+
+function update() {
+    document.getElementById("pt").textContent = points;
+}
+
+function rand(prob) {
+    return Math.random() < prob;
+}
+
+/* ====== 第一抽選 ====== */
+function startFirst() {
+    if (points < 1) {
+        log("ポイント不足！ 第一抽選できません");
+        return;
+    }
+    points -= 1;
+    update();
+    log("■ 第一抽選（1/15）開始");
+
+    if (rand(1/15)) {
+        log("第一抽選当たり！ +4pt");
+        points += 4;
+        update();
+        startSecond();
+    } else {
+        log("第一抽選ハズレ… 終了");
+    }
+}
+
+/* ====== 第二抽選 ====== */
+function startSecond() {
+    log("■ 第二抽選（1/199）開始");
+
+    if (rand(1/199)) {
+        log("第二抽選当たり！ +100pt");
+        points += 100;
+        update();
+        startThird();
+    } else {
+        log("第二抽選ハズレ… 終了");
+    }
+}
+
+/* ====== 第三抽選 ====== */
+function startThird() {
+    log("■ 第三抽選（1/2）開始");
+
+    if (rand(1/2)) {
+        log("第三抽選当たり！ 第四抽選へ");
+        startFourth();
+    } else {
+        log("第三抽選ハズレ… 終了");
+    }
+}
+
+/* ====== 第四抽選（11回 68%） ====== */
+function startFourth() {
+    log("◆ 第四抽選（68% × 11回）開始");
+
+    let hit = false;
+    for (let i = 1; i <= 11; i++) {
+        if (rand(0.68)) {
+            hit = true;
+            log(`  第四抽選 ${i}回目 → 当たり！`);
+            break;
+        } else {
+            log(`  第四抽選 ${i}回目 → ハズレ`);
+        }
+    }
+
+    if (hit) {
+        log("第四抽選ラウンド当選！ +100pt獲得し再セット");
+        points += 100;
+        update();
+        startFourth();  // ループ継続
+    } else {
+        log("第四抽選 全ハズレ… 終了");
+    }
+}
+
+/* ポイント追加 */
+function addPoint() {
+    points++;
+    update();
+}
+
+</script>
+</body>
+</html>
