@@ -49,8 +49,9 @@
 <!-- ログリセット -->
 <button onclick="resetLogs()">ログリセット</button>
 
-<!-- 自動抽選 -->
-<button onclick="startAuto()">抽選開始（所持ポイント最大）</button>
+<!-- 任意回数抽選 -->
+<input id="manualCount" type="number" placeholder="抽選回数（任意）" min="1">
+<button onclick="startManual()">指定回数だけ抽選</button>
 
 <!-- ログ表示枠（3分割） -->
 <h3>第一抽選ログ</h3>
@@ -181,14 +182,15 @@ function doFourth() {
 }
 
 /* =============================
-   自動抽選
+   指定回数抽選
 ============================= */
-function startAuto() {
-    if (points <= 0) return;
+function startManual() {
+    let count = parseInt(document.getElementById("manualCount").value);
+    if (!count || count <= 0) return;
 
-    while (points > 0) {
-        let r = doFirst();
-        if (r === true) break;
+    for (let i = 0; i < count; i++) {
+        if (points <= 0) break;
+        doFirst();
     }
 }
 </script>
