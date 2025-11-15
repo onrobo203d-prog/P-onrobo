@@ -35,7 +35,7 @@
 </head>
 <body>
 
-<h2>スマホ版 ラッシュ機パチンコ</h2>
+<h2>スマホ版ラッシュ機パチンコ</h2>
 
 <p>ポイント: <span id="pt">0</span></p>
 
@@ -151,8 +151,9 @@ function doThird() {
 ============================= */
 function doFourth() {
 
-    const prob = 0.1449; // 1回あたり確率（11回で継続率80%）
-    const count = 11;      // 11回抽選
+    const prob = 0.1877; // 1回あたり確率（11回で継続率90% → 平均10ループ）
+    const count = 11;     // 11回抽選
+    const perLoopGain = 200; // 1ラッシュで獲得ポイント200
 
     let loop = 0;
     let totalGain = 0;
@@ -169,8 +170,8 @@ function doFourth() {
         }
 
         if (hit) {
-            points += 100;
-            totalGain += 100;
+            points += perLoopGain;
+            totalGain += perLoopGain;
             update();
         } else {
             log4(`ラッシュ ${loop - 1} ループ！ 合計 +${totalGain}pt`);
