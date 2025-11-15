@@ -2,21 +2,32 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ラッシュ機パチンコシミュレーター</title>
+<title>新ラッシュ機パチンコシミュレーター</title>
 <style>
   body { font-family: sans-serif; padding: 20px; background: #fafafa; }
   button { font-size: 20px; padding: 10px 20px; margin: 5px; }
-  #log { white-space: pre-line; background: #fff; padding: 10px; border:1px solid #ccc; height: 300px; overflow-y: scroll; }
+  input { font-size: 18px; padding: 5px; }
+  #log { white-space: pre-line; background: #fff; padding: 10px; border:1px solid #ccc; height: 350px; overflow-y: scroll; }
 </style>
 </head>
 <body>
 
-<h2>ラッシュ機 パチンコシミュレーター</h2>
+<h2>新ラッシュ機 パチンコシミュレーター</h2>
 
 <p>ポイント: <span id="pt">0</span></p>
 
-<button onclick="addPoint()">＋（ポイント追加）</button>
-<button onclick="startFirst()">第一抽選開始（1pt消費）</button>
+<!-- 入力してポイント追加 -->
+<input id="addVal" type="number" placeholder="追加ポイント" min="1">
+<button onclick="addPoint()">ポイント追加</button>
+<br><br>
+
+<!-- 所持ポイント最大で連続抽選 -->
+<button onclick="startAuto()">抽選開始（所持ポイント最大）</button>
+
+<!-- 任意回数抽選 -->
+<br><br>
+<input id="manualCount" type="number" placeholder="抽選回数" min="1">
+<button onclick="startManual()">指定回数だけ抽選</button>
 
 <h3>ログ</h3>
 <div id="log"></div>
@@ -36,81 +47,144 @@ function rand(prob) {
     return Math.random() < prob;
 }
 
-/* ====== 第一抽選 ====== */
-function startFirst() {
+/* =============================
+   ポイント追加
+============================= */
+function addPoint() {
+    const v = parseInt(document.getElementById("addVal").value);
+    if (!v || v <= 0) return;
+    points += v;
+    update();
+    log("ポイント +" + v);
+}
+
+/* =============================
+   第一抽選（共通）
+============================= */
+function doFirst() {
     if (points < 1) {
-        log("ポイント不足！ 第一抽選できません");
-        return;
+        log("ポイント不足で第一抽選できません");
+        return false;
     }
     points -= 1;
     update();
-    log("■ 第一抽選（1/15）開始");
+    log("■ 第一抽選（6%）開始");
 
-    if (rand(1/15)) {
-        log("第一抽選当たり！ +4pt");
-        points += 4;
-        update();
-        startSecond();
+    if (rand(0.06)) {
+        log("第一抽選当たり！ +4pt → 第二抽選へ");
+        points += 4; update();
+        return doSecond();
     } else {
         log("第一抽選ハズレ… 終了");
+        return true; // 抽選としては終了（false＝続けられない、true＝続いてもよい）
     }
 }
 
-/* ====== 第二抽選 ====== */
-function startSecond() {
-    log("■ 第二抽選（1/199）開始");
+/* =============================
+   第二抽選
+============================= */
+function doSecond() {
+    log("■ 第二抽選（0.5%）開始");
 
-    if (rand(1/199)) {
-        log("第二抽選当たり！ +100pt");
-        points += 100;
-        update();
-        startThird();
+    if (rand(0.005)) {
+        log("第二抽選当たり！ +100pt → 第三抽選へ");
+        points += 100; update();
+        return doThird();
     } else {
         log("第二抽選ハズレ… 終了");
+        return true;
     }
 }
 
-/* ====== 第三抽選 ====== */
-function startThird() {
-    log("■ 第三抽選（1/2）開始");
+/* =============================
+   第三抽選
+============================= */
+function doThird() {
+    log("■ 第三抽選（50%）開始");
 
-    if (rand(1/2)) {
-        log("第三抽選当たり！ 第四抽選へ");
-        startFourth();
+    if (rand(0.5)) {
+        log("第三抽選当たり！ → 第四抽選へ");
+        return doFourth();
     } else {
         log("第三抽選ハズレ… 終了");
+        return true;
     }
 }
 
-/* ====== 第四抽選（11回 68%） ====== */
-function startFourth() {
-    log("◆ 第四抽選（68% × 11回）開始");
+/* =============================
+   第四抽選（11回 / 68%）
+============================= */
+function doFourth() {
+    log("◆ 第四抽選（68% ×11回）開始");
 
-    let hit = false;
-    for (let i = 1; i <= 11; i++) {
-        if (rand(0.68)) {
-            hit = true;
-            log(`  第四抽選 ${i}回目 → 当たり！`);
-            break;
+    while (true) {
+        let hit = false;
+
+        for (let i = 1; i <= 11; i++) {
+            if (rand(0.68)) {
+                hit = true;
+                log(`  第四抽選 ${i}回目 → 当たり！`);
+                break;
+            } else {
+                log(`  第四抽選 ${i}回目 → ハズレ`);
+            }
+        }
+
+        if (hit) {
+            log("第四抽選ラウンド当選！ +100pt → 再セット");
+            points += 100;
+            update();
+            // 再び11回セットでループ
         } else {
-            log(`  第四抽選 ${i}回目 → ハズレ`);
+            log("第四抽選 全ハズレ → 終了");
+            return true;
+        }
+    }
+}
+
+/* =============================
+   自動抽選（所持ポイント最大）
+============================= */
+function startAuto() {
+    if (points <= 0) {
+        log("ポイントがありません");
+        return;
+    }
+
+    log("========== 自動抽選開始 ==========");
+
+    // 所持ポイントが尽きるか、当選で止まるまで
+    while (points > 0) {
+        let result = doFirst();
+        // 第一抽選が当たった → 第二・三・四抽選後に終了
+        if (result === true) break;
+    }
+
+    log("========== 自動抽選終了 ==========");
+}
+
+/* =============================
+   指定回数だけ抽選
+============================= */
+function startManual() {
+    let count = parseInt(document.getElementById("manualCount").value);
+    if (!count || count <= 0) return;
+
+    log(`========== ${count}回 抽選開始 ==========`);
+
+    for (let i = 1; i <= count; i++) {
+        if (points <= 0) {
+            log("ポイントが尽きたため終了");
+            break;
+        }
+        log(`--- ${i}回目 ---`);
+        let r = doFirst();
+        if (r === true) {
+            // 第一抽選当たり or 第一抽選ハズレで止まらず続く仕様
         }
     }
 
-    if (hit) {
-        log("第四抽選ラウンド当選！ +100pt獲得し再セット");
-        points += 100;
-        update();
-        startFourth();  // ループ継続
-    } else {
-        log("第四抽選 全ハズレ… 終了");
-    }
-}
-
-/* ポイント追加 */
-function addPoint() {
-    points++;
-    update();
+    log("========== 指定回数抽選終了 ==========");
 }
 
 </script>
